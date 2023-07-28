@@ -1,0 +1,55 @@
+generator client {
+  provider             = "prisma-client-py"
+  recursive_type_depth = "5"
+  interface            = "sync"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Commendation {
+  id          String   @id @default(uuid())
+  message     String
+  recipientId String
+  senderId    String
+  createdAt   DateTime @default(now())
+  recipient   Member   @relation("recipient", fields: [recipientId], references: [id])
+  sender      Member   @relation("sender", fields: [senderId], references: [id])
+}
+
+model Member {
+  id                String         @id @default(uuid())
+  name              String
+  email             String         @unique
+  phone             String?
+  imageURL          String?
+  commendations     Commendation[] @relation("recipient")
+  sentCommendations Commendation[] @relation("sender")
+  leadsTeams        TeamLeaders[]
+  roles             Role[]         @relation("MemberToRole")
+  teams             Team[]         @relation("MemberToTeam")
+}
+
+model Team {
+  id          String        @id @default(uuid())
+  name        String
+  imageURL    String?
+  teamLeaders TeamLeaders[]
+  members     Member[]      @relation("MemberToTeam")
+}
+
+model Role {
+  id      String   @id @default(uuid())
+  name    String
+  members Member[] @relation("MemberToRole")
+}
+
+model TeamLeaders {
+  id       String @id @default(uuid())
+  memberId String
+  teamId   String
+  member   Member @relation(fields: [memberId], references: [id])
+  team     Team   @relation(fields: [teamId], references: [id])
+}
